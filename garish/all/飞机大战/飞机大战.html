@@ -42,7 +42,7 @@
     document.body.appendChild(fly); //将刚创建的div追加到body中
 
     //使飞机鼠标跟随
-    document.touchmove = function (e) { //onmousemove 当鼠标移动时触发事件
+    document.onmousemove = function (e) { //onmousemove 当鼠标移动时触发事件
         var fly = document.getElementById('my_fly'); //获取我方战机
         var bg = document.getElementById('background'); //获取背景
         var fly_X = e.clientX - 20; //获取鼠标的坐标 -20是减去飞机宽高的一半，以达到飞机中心与鼠标对应
