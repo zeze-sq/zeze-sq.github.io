@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>简单的飞机大战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 背景 */
+        #background {
+            width: 320px;
+            height: 580px;
+            background-image: url(./imgs/bg.png);
+            margin: auto;
+        }
+
+        /* 我方飞机 */
+        #my_fly {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 游戏面板 -->
+    <div id="background"></div>
+</body>
+<script>
+    //创建我方战机
+    var fly = document.createElement('div'); //创建一个div
+    fly.id = 'my_fly'; //为div添加id名
+    fly.innerHTML = '<img src ="./imgs/my_fly.png" width=30px height=30px>'; //在div中插入飞机的图片
+    document.body.appendChild(fly); //将刚创建的div追加到body中
+
+    //使飞机鼠标跟随
+    document.onmousemove = function (e) { //onmousemove 当鼠标移动时触发事件
+        var fly = document.getElementById('my_fly'); //获取我方战机
+        var bg = document.getElementById('background'); //获取背景
+        var fly_X = e.clientX - 20; //获取鼠标的坐标 -20是减去飞机宽高的一半，以达到飞机中心与鼠标对应
+        var fly_Y = e.clientY - 20;
+        //游戏背景的区域
+        var bgX = fly_X > bg.offsetLeft && fly_X < bg.offsetLeft + bg.offsetWidth - 30;
+        var bgY = fly_Y > bg.offsetTop && fly_Y < bg.offsetTop + bg.offsetHeight - 30;
+        if (bgX && bgY) { //只有在游戏背景区域内飞机才跟随鼠标移动
+            fly.style.top = fly_Y + 'px'; //将鼠标此时的坐标赋值给我方飞机
+            fly.style.left = fly_X + 'px';
+            //此时飞机跟随鼠标移动，我们为该行为定义一个属性
+            fly.follow = true; //今后follow为true则代表飞机可跟随鼠标移动，false则相反
+        }
+    }
+
+    //创建子弹
+    var objB = { //子弹相关变量
+        name: 'bullet', //名称
+        num: 1, //数量
+        arr: [], //子弹的属性['id|top|left']
+        width: 5, //子弹宽
+        height: 10, //子弹高
+        path: './imgs/bullet.png'
+    }
+    creatBullet(objB);
+
+    function creatBullet(obj) {
+        setInterval(function () {
+            var fly = document.getElementById('my_fly');
+            if (fly.follow) { //当飞机可跟随鼠标移动时可以发射子弹
+                var bull = document.createElement('div'); //创建div元素作为子弹
+                bull.id = obj.name + obj.num; //子弹的id名随创建数量不断变化(因为id值唯一)
+                var length = obj.arr.length;
+                if (length < 40) {
+                    obj.arr[length] = bull.id + '|';
+                    obj.num++;
+                    bull.style.width = obj.width + 'px'; //子弹的相关属性
+                    bull.style.height = obj.height + 'px';
+                    bull.style.position = 'absolute';
+                    bull.style.background = 'url(' + obj.path + ')';
+
+                    bull.style.top = parseInt(fly.style.top) + 'px'; //子弹发出的位置
+                    obj.arr[length] = obj.arr[length] + bull.style.top + '|';
+                    bull.style.left = parseInt(fly.style.left) + 12 + 'px';
+                    obj.arr[length] = obj.arr[length] + bull.style.left;
+                }
+                document.body.appendChild(bull); //将子弹添加到body
+            }
+        }, 700)
+    }
+
+    //让子弹运动起来
+    function moveBullet() {
+        var fly = document.getElementById('my_fly');
+        if (fly.follow) {
+            for (var i = 0; i < objB.arr.length; i++) { //遍历子弹的对象
+                var newArr = objB.arr[i].split('|'); //将数组arr中的元素切割出来放入新数组
+                var eleB = document.getElementById(newArr[0]);
+                //切割后第0项为id 第一项为top 第二项为left  
+                newArr[1] = parseInt(newArr[1]) - 1; //数组第一项为top，不断减1则子弹便会向上运动
+                eleB.style.top = newArr[1] + 'px';
+                objB.arr[i] = newArr[0] + '|' + newArr[1] + '|' + newArr[2];
+                if (newArr[1] < 0) { //第一项为top，当top小于0 也就是子弹走出游戏面板时删除该子弹
+                    objB.arr.splice(i, 1);
+                    var delEle = document.getElementById(newArr[0]); //获取走出面板的子弹
+                    delEle.parentNode.removeChild(delEle); //删除自身
+                }
+            }
+        }
+    }
+
+
+    //创建敌机（与创建子弹类似）
+    var objF = { //敌机相关变量
+        name: 'foe', //名称
+        num: 1, //数量
+        arr: [], //敌机的属性['id|top|left']
+        width: 34, //敌机宽
+        height: 24, //敌机高
+        path: './imgs/he_fly.png'
+    }
+    creatFoe(objF);
+
+    function creatFoe(obj) {
+        setInterval(function () {
+            var fly = document.getElementById('my_fly');
+            var bg = document.getElementById('background'); //获取背景
+            if (fly.follow) { //当飞机可跟随鼠标移动时出现敌机
+                var bull = document.createElement('div'); //创建div元素作为敌机
+                bull.id = obj.name + obj.num; //子弹的id名随创建数量不断变化(因为id值唯一)
+                var length = obj.arr.length;
+                if (length < 40) {
+                    obj.arr[length] = bull.id + '|';
+                    obj.num++;
+                    bull.style.width = obj.width + 'px';
+                    bull.style.height = obj.height + 'px';
+                    bull.style.position = 'absolute';
+                    bull.style.background = 'url(' + obj.path + ')';
+
+                    bull.style.top = 0; //敌机的顶部初始位置为0
+                    obj.arr[length] = obj.arr[length] + bull.style.top + '|';
+                    bull.style.left = bg.offsetLeft + 290 * Math.random() + 'px'; //敌机的左侧初始位置为随机
+                    obj.arr[length] = obj.arr[length] + bull.style.left;
+                }
+                document.body.appendChild(bull); //将敌机添加到body
+            }
+        }, 1000)
+    }
+
+    //让敌机运动起来
+    function moveFoe() {
+        var fly = document.getElementById('my_fly');
+        var bg = document.getElementById('background'); //获取背景
+        if (fly.follow) {
+            for (var i = 0; i < objF.arr.length; i++) { //遍历敌机的对象
+                var newArr = objF.arr[i].split('|'); //将数组arr中的元素切割出来放入新数组
+                var eleB = document.getElementById(newArr[0]);
+                //切割后第0项为id 第一项为top 第二项为left  
+                newArr[1] = parseInt(newArr[1]) + 1; //数组第一项为top，不断加1则飞机便会向下运动
+                eleB.style.top = newArr[1] + 'px';
+                objF.arr[i] = newArr[0] + '|' + newArr[1] + '|' + newArr[2];
+                if (newArr[1] > bg.offsetLeft - 30) {
+                    objF.arr.splice(i, 1);
+                    var delEle = document.getElementById(newArr[0]);
+                    delEle.parentNode.removeChild(delEle);
+                }
+            }
+        }
+    }
+
+    //调用运动函数
+    setInterval(function () {
+        moveBullet(); //子弹运动
+        moveFoe(); //敌机运动
+
+        //子弹和敌机相遇时消失
+        for (var i = 0; i < objF.arr.length; i++) {
+            var newArr = objF.arr[i].split('|');
+            var eleF = document.getElementById(newArr[0]);
+            var xFS = parseInt(newArr[2]);
+            var xFE = parseInt(newArr[2]) + 34;
+            var yFS = parseInt(newArr[1]);
+            var yFE = parseInt(newArr[1]) + 24;
+            for (var j = 0; j < objB.arr.length; j++) {
+                var newArr1 = objB.arr[j].split('|');
+                var eleB = document.getElementById(newArr1[0]);
+                var xB = parseInt(newArr1[2]);
+                var yB = parseInt(newArr1[1]);
+                var xCheck = xB > xFS && xB < xFE;
+                var yCheck = yB > yFS && yB < yFE;
+
+                if (xCheck && yCheck) {
+                    objF.arr.splice(i, 1);
+                    eleF.parentNode.removeChild(eleF);
+                    objB.arr.splice(j, 1);
+                    eleB.parentNode.removeChild(eleB);
+                }
+            }
+        }
+    }, 10)
+</script>
+
+</html>
